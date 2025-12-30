@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Hero 2 - Sentence Builder</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Start Screen -->
+        <section id="start-screen" class="screen active">
+            <h1 class="title">REGISTER HERO <br><span class="highlight">INTERMEDIATE</span></h1>
+            <p class="subtitle">単語を並べて、正しい文章を作れ！</p>
+            <button id="start-btn" class="btn primary-btn">START TRAINING</button>
+            <div class="instructions">
+                <h3>遊び方</h3>
+                <ul>
+                    <li>質問に合った答えを考えてください</li>
+                    <li>バラバラの単語を正しい順にタップ</li>
+                    <li>完成したらCHECKボタンを押そう</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="screen hidden">
+            <div class="hud">
+                <div class="timer-bar">
+                    <div id="timer-fill"></div>
+                </div>
+                <div class="hud-info">
+                    <div class="question-counter">
+                        <span id="question-counter">1/10</span>
+                    </div>
+                    <div class="score-board">Score: <span id="score-display">0</span></div>
+                </div>
+            </div>
+
+            <div class="character-area">
+                <div class="customer-avatar">👤</div>
+                <div class="speech-bubble" id="speech-bubble">
+                    <button id="replay-btn" aria-label="もう一度聞く">🔊</button>
+                    <p id="question-text">...</p>
+                </div>
+            </div>
+
+            <!-- Sentence Building Area -->
+            <div class="sentence-builder-area">
+
+                <!-- Where selected words go -->
+                <div class="answer-box">
+                    <p class="label">Your Answer:</p>
+                    <div id="answer-container" class="word-container">
+                        <!-- Selected words appear here -->
+                    </div>
+                </div>
+
+                <!-- Source pool of words -->
+                <div class="word-pool">
+                    <p class="label">Tap words to build sentence:</p>
+                    <div id="pool-container" class="word-container">
+                        <!-- Shuffled words injected here -->
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="action-area">
+                <button id="clear-btn" class="btn secondary-btn">RESET</button>
+                <button id="check-btn" class="btn primary-btn" disabled>CHECK ANSWER</button>
+                <button id="next-btn" class="btn primary-btn hidden">NEXT QUESTION ▶</button>
+            </div>
+
+            <div id="feedback-msg" class="feedback hidden"></div>
+
+        </section>
+
+        <!-- Result Screen -->
+        <section id="result-screen" class="screen hidden">
+            <h2>MISSION COMPLETED</h2>
+            <div class="final-score">
+                <span class="score-label">Total Score</span>
+                <span id="final-score-display">0</span>
+            </div>
+            <p id="rank-display">Rank: Trainee</p>
+            <button id="retry-btn" class="btn secondary-btn">PLAY AGAIN</button>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

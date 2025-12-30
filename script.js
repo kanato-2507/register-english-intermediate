@@ -1,0 +1,358 @@
+// Game Configuration
+const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
+const POINTS_PER_QUESTION = 200;
+
+// Quiz Data - Station Bookstore (Intermediate)
+const QUESTIONS = [
+    {
+        text: "コミック売り場はどこですか？",
+        audio: "Where are the comics?",
+        sentence: "Go straight down this aisle and it's on your left"
+    },
+    {
+        text: "ここは何階ですか？",
+        audio: "What floor is this?",
+        sentence: "This is the third floor"
+    },
+    {
+        text: "ここから新館に行けますか？",
+        audio: "Can I go to the new building from here?",
+        sentence: "The third floor is not connected to the new building"
+    },
+    {
+        text: "2階へはどう行けばいいですか？",
+        audio: "How do I get to the 2nd floor?",
+        sentence: "Take the escalator down to the second floor"
+    },
+    {
+        text: "エスカレーターはどこですか？",
+        audio: "Where is the escalator?",
+        sentence: "The escalator is over there"
+    },
+    {
+        text: "（商品画像を見せて）これありますか？",
+        audio: "Do you have this?",
+        sentence: "We don't have it"
+    },
+    {
+        text: "電気屋さんはどこですか？",
+        audio: "Where is the electronics store?",
+        sentence: "The electronics store is on the fourth floor of the new building"
+    },
+    {
+        text: "これ、免税になりますか？",
+        audio: "Is this tax-free?",
+        sentence: "It's not a duty-free shop"
+    },
+    {
+        text: "この価格は税込みですか？",
+        audio: "Is tax included in this price?",
+        sentence: "Yes tax is included"
+    },
+    {
+        text: "プレゼント包装できますか？",
+        audio: "Can you wrap this for a gift?",
+        sentence: "Certainly free of charge"
+    },
+    {
+        text: "クレジットカード使えますか？",
+        audio: "Do you accept credit cards?",
+        sentence: "Yes we do"
+    },
+    {
+        text: "返品できますか？",
+        audio: "Can I return this?",
+        sentence: "I'm sorry we don't accept returns"
+    }
+];
+
+// Game State
+let currentQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let timerInterval = null;
+let timeLeft = 0;
+let currentWords = []; // Array of word objects {id, text, selected}
+let selectedWordIds = []; // Order of Ids in the answer box
+
+// DOM Elements
+const startScreen = document.getElementById('start-screen');
+const gameScreen = document.getElementById('game-screen');
+const resultScreen = document.getElementById('result-screen');
+const timerFill = document.getElementById('timer-fill');
+const scoreDisplay = document.getElementById('score-display');
+const questionCounter = document.getElementById('question-counter');
+const questionText = document.getElementById('question-text');
+const poolContainer = document.getElementById('pool-container');
+const answerContainer = document.getElementById('answer-container');
+const checkBtn = document.getElementById('check-btn');
+const clearBtn = document.getElementById('clear-btn');
+const nextBtn = document.getElementById('next-btn');
+const feedbackMsg = document.getElementById('feedback-msg');
+const replayBtn = document.getElementById('replay-btn');
+const finalScoreDisplay = document.getElementById('final-score-display');
+const rankDisplay = document.getElementById('rank-display');
+
+// Encouragement Messages
+const ENCOURAGEMENT = [
+    "完璧！🎉",
+    "素晴らしい！⭐",
+    "すごい！🌟",
+    "よくできました！💯",
+    "最高！✨",
+    "その調子！🔥",
+    "天才！💎",
+    "パーフェクト！🏆"
+];
+
+// Audio
+const synth = window.speechSynthesis;
+
+function speak(text, rate = 0.7) {
+    synth.cancel();
+    if (text !== '') {
+        const utterThis = new SpeechSynthesisUtterance(text);
+        const voices = synth.getVoices();
+        const enVoice = voices.find(v => v.lang.startsWith('en'));
+        if (enVoice) utterThis.voice = enVoice;
+        utterThis.rate = rate; // Slower for intermediate too?
+        synth.speak(utterThis);
+    }
+}
+
+window.speechSynthesis.onvoiceschanged = () => { };
+
+// Init
+function initGame() {
+    score = 0;
+    currentQuestionIndex = 0;
+    // Select 10 random questions from the pool
+    const shuffled = [...QUESTIONS].sort(() => 0.5 - Math.random());
+    currentQuestions = shuffled.slice(0, 10);
+    updateScoreUI();
+
+    startScreen.classList.remove('active');
+    startScreen.classList.add('hidden');
+    resultScreen.classList.remove('active');
+    resultScreen.classList.add('hidden');
+
+    gameScreen.classList.remove('hidden');
+    gameScreen.classList.add('active');
+
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentQuestionIndex >= currentQuestions.length) {
+        showResults();
+        return;
+    }
+
+    const qData = currentQuestions[currentQuestionIndex];
+    questionText.textContent = qData.text;
+
+    // Update question counter
+    const totalOriginal = QUESTIONS.length;
+    const completedCount = currentQuestions.filter(q => q.answeredCorrectly).length;
+    questionCounter.textContent = `${completedCount}/${totalOriginal}`;
+
+    // Reset State
+    selectedWordIds = [];
+    nextBtn.classList.add('hidden');
+    checkBtn.classList.remove('hidden');
+    checkBtn.disabled = true;
+    feedbackMsg.classList.add('hidden');
+    feedbackMsg.className = 'feedback hidden'; // reset error class
+
+    // Prepare Words
+    // Remove punctuation for easier matching, or keep it?
+    // Let's split by space.
+    const rawWords = qData.sentence.split(' ');
+    currentWords = rawWords.map((w, i) => ({
+        id: i,
+        text: w,
+        selected: false
+    }));
+
+    // Shuffle words for pool
+    // Need a separate shuffled array for display, but link back to IDs?
+    renderUI();
+
+    timeLeft = GAME_DURATION_PER_QUESTION;
+    updateTimerUI();
+    startTimer();
+
+    setTimeout(() => speak(qData.audio, 0.9), 500); // Speak prompt faster, answer slower
+}
+
+function renderUI() {
+    // 1. Render Pool (Show only unselected words)
+    poolContainer.innerHTML = '';
+
+    // We want the pool order to remain somewhat consistent or shuffled? 
+    // Capturing initial shuffle order would be better.
+    // For now, let's just filter unselected items.
+
+    const unselectedWords = currentWords.filter(w => !w.selected);
+    // Shuffle only on first load? Nay, shuffle always looks cleaner.
+    // Ideally we shuffle ONCE per question.
+
+    // Quick fix: Just show unselected words shuffled or in consistent ID order?
+    // Let's Shuffle the DISPLAY list.
+    const displayPool = [...unselectedWords].sort((a, b) => a.text.localeCompare(b.text)); // Alphabetical for extra challenge? Or Random?
+
+    displayPool.forEach(word => {
+        const card = createWordCard(word, false);
+        poolContainer.appendChild(card);
+    });
+
+    // 2. Render Answer (Show selected words in order)
+    answerContainer.innerHTML = '';
+    selectedWordIds.forEach(id => {
+        const word = currentWords.find(w => w.id === id);
+        const card = createWordCard(word, true);
+        answerContainer.appendChild(card);
+    });
+
+    // 3. Update Check Button
+    checkBtn.disabled = selectedWordIds.length === 0;
+}
+
+function createWordCard(word, inAnswerBox) {
+    const div = document.createElement('div');
+    div.classList.add('word-card');
+    div.textContent = word.text;
+
+    div.addEventListener('click', () => {
+        if (nextBtn.classList.contains('hidden') === false) return; // Game inactive
+
+        if (inAnswerBox) {
+            // Remove from answer, back to pool
+            word.selected = false;
+            selectedWordIds = selectedWordIds.filter(id => id !== word.id);
+        } else {
+            // Add to answer
+            word.selected = true;
+            selectedWordIds.push(word.id);
+        }
+        renderUI();
+    });
+    return div;
+}
+
+function checkAnswer() {
+    const qData = currentQuestions[currentQuestionIndex];
+
+    // Reconstruct sentence
+    const builtSentence = selectedWordIds.map(id => currentWords.find(w => w.id === id).text).join(' ');
+    const targetSentence = qData.sentence;
+
+    // Normalize (ignore simplistic case/punctuation diffs if needed)
+    if (builtSentence === targetSentence) {
+        // Correct - mark as answered correctly
+        qData.answeredCorrectly = true;
+
+        // Random encouragement message
+        const randomMsg = ENCOURAGEMENT[Math.floor(Math.random() * ENCOURAGEMENT.length)];
+        feedbackMsg.textContent = randomMsg;
+        feedbackMsg.classList.remove('hidden', 'error');
+        feedbackMsg.classList.add('success');
+
+        // Animate word cards
+        document.querySelectorAll('.answer-box .word-card').forEach(card => {
+            card.classList.add('success');
+        });
+
+        // Animate score
+        const oldScore = score;
+        score += Math.ceil(POINTS_PER_QUESTION + (timeLeft * 10));
+        scoreDisplay.classList.add('animate');
+        setTimeout(() => scoreDisplay.classList.remove('animate'), 500);
+        updateScoreUI();
+
+        // Speak the built sentence
+        speak(builtSentence, 0.7);
+
+        finishQuestion(true);
+    } else {
+        // Wrong - will retry later
+        feedbackMsg.textContent = "Try Again!";
+        feedbackMsg.classList.add('error');
+        feedbackMsg.classList.remove('hidden', 'success');
+        setTimeout(() => {
+            feedbackMsg.classList.add('hidden');
+        }, 1000);
+    }
+}
+
+function finishQuestion(isCorrect) {
+    clearInterval(timerInterval);
+    checkBtn.classList.add('hidden');
+    clearBtn.classList.add('hidden'); // Hide reset
+
+    // If wrong or timeout, add question back to queue
+    if (!isCorrect) {
+        const qData = currentQuestions[currentQuestionIndex];
+        // Add to end of queue for retry
+        currentQuestions.push(qData);
+    }
+
+    nextBtn.classList.remove('hidden');
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        updateTimerUI();
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeout();
+        }
+    }, 100);
+}
+
+function handleTimeout() {
+    // Timeout = wrong answer, will retry
+    feedbackMsg.textContent = "Time's Up! Correct: " + currentQuestions[currentQuestionIndex].sentence;
+    feedbackMsg.classList.remove('hidden', 'error');
+    speak(currentQuestions[currentQuestionIndex].sentence, 0.7);
+    finishQuestion(false); // Mark as incorrect to trigger retry
+}
+
+function updateTimerUI() {
+    const percentage = (timeLeft / GAME_DURATION_PER_QUESTION) * 100;
+    timerFill.style.width = `${Math.max(0, percentage)}%`;
+}
+
+function updateScoreUI() {
+    scoreDisplay.textContent = score;
+}
+
+function showResults() {
+    gameScreen.classList.remove('active');
+    gameScreen.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
+    setTimeout(() => resultScreen.classList.add('active'), 50);
+    finalScoreDisplay.textContent = score;
+    // Rank logic...
+    rankDisplay.textContent = `Score: ${score}`;
+}
+
+// Events
+document.getElementById('start-btn').addEventListener('click', initGame);
+document.getElementById('retry-btn').addEventListener('click', initGame);
+checkBtn.addEventListener('click', checkAnswer);
+nextBtn.addEventListener('click', () => {
+    currentQuestionIndex++;
+    loadQuestion();
+});
+clearBtn.addEventListener('click', () => {
+    // Reset current selection
+    currentWords.forEach(w => w.selected = false);
+    selectedWordIds = [];
+    renderUI();
+});
+replayBtn.addEventListener('click', () => {
+    speak(currentQuestions[currentQuestionIndex].audio, 0.9);
+});
