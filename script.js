@@ -186,6 +186,7 @@ function initGame() {
         const u = new SpeechSynthesisUtterance("Let's start");
         u.volume = 0; // Silent start if preferred, or audible
         u.rate = 1.0;
+        synth.resume(); // CRITICAL for Chrome/Safari unlock
         synth.speak(u);
     }
 
@@ -237,6 +238,7 @@ function loadQuestion() {
     selectedWordIds = [];
     nextBtn.classList.add('hidden');
     checkBtn.classList.remove('hidden');
+    clearBtn.classList.remove('hidden'); // Show reset
     checkBtn.disabled = true;
     feedbackMsg.classList.add('hidden');
     feedbackMsg.className = 'feedback hidden'; // reset error class
@@ -474,7 +476,7 @@ clearBtnEl.addEventListener('touchstart', (e) => {
 const replayHandler = () => {
     const qData = currentQuestions[currentQuestionIndex];
     if (qData) {
-        speak(qData.audio, 0.9);
+        speak(qData.audio, 1.0);
     }
 };
 const replayBtnEl = document.getElementById('replay-btn');

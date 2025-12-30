@@ -67,12 +67,17 @@ body {
     opacity: 0;
     pointer-events: none;
     transform: scale(0.95);
-    overflow-y: auto;
-    /* Allow scrolling */
-    -webkit-overflow-scrolling: touch;
-    /* Smooth scroll on iOS */
-    padding-bottom: 50px;
-    /* Safe space for scrolling */
+    padding-bottom: 20px;
+    overflow: hidden;
+    /* Prevent full screen scroll, manage internal scroll */
+}
+
+@media (max-width: 600px) {
+    .screen {
+        padding: 0.5rem;
+        padding-bottom: 60px;
+        /* Space for buttons */
+    }
 }
 
 @media (max-width: 600px) {
@@ -328,10 +333,13 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    overflow-y: auto;
-    /* Allow this area to scroll if needed */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow: hidden;
+    /* Don't scroll the wrapper */
     min-height: 0;
-    /* Important for flex child scrolling */
+    flex: 1;
 }
 
 .label {
@@ -357,8 +365,20 @@ body {
     min-height: 80px;
 }
 
+.word-pool {
+    flex: 1;
+    overflow-y: auto;
+    /* scrollable pool */
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* subtle border */
+    border-radius: 8px;
+    padding: 2px;
+}
+
 .word-pool .word-container {
     background: transparent;
+    align-content: flex-start;
 }
 
 /* Word Cards */
