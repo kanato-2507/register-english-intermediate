@@ -1,3 +1,20 @@
+// Global Error Handler for Mobile Debugging
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    const errorBox = document.createElement('div');
+    errorBox.style.position = 'fixed';
+    errorBox.style.top = '0';
+    errorBox.style.left = '0';
+    errorBox.style.width = '100%';
+    errorBox.style.background = 'red';
+    errorBox.style.color = 'white';
+    errorBox.style.padding = '10px';
+    errorBox.style.zIndex = '9999';
+    errorBox.style.fontSize = '12px';
+    errorBox.textContent = 'Error: ' + msg + ' at line ' + lineNo;
+    document.body.appendChild(errorBox);
+    return false;
+};
+
 // Game Configuration
 const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
 const POINTS_PER_QUESTION = 200;
@@ -105,22 +122,38 @@ const ENCOURAGEMENT = [
     "パーフェクト！🏆"
 ];
 
-// Audio
-const synth = window.speechSynthesis;
+// Audio - Safe Guarded
+let synth = null;
+try {
+    synth = window.speechSynthesis;
+} catch (e) {
+    console.warn("Speech Synthesis not supported", e);
+}
 
 function speak(text, rate = 0.7) {
-    synth.cancel();
-    if (text !== '') {
-        const utterThis = new SpeechSynthesisUtterance(text);
-        const voices = synth.getVoices();
-        const enVoice = voices.find(v => v.lang.startsWith('en'));
-        if (enVoice) utterThis.voice = enVoice;
-        utterThis.rate = rate; // Slower for intermediate too?
-        synth.speak(utterThis);
+    if (synth) {
+        try {
+            // Cancel any current speaking
+            synth.cancel();
+
+            const utterThis = new SpeechSynthesisUtterance(text);
+            const voices = synth.getVoices();
+            // Try to find English voice
+            const enVoice = voices.find(v => v.lang.startsWith('en'));
+            if (enVoice) utterThis.voice = enVoice;
+
+            utterThis.rate = rate;
+            synth.speak(utterThis);
+        } catch (e) {
+            console.error("Speech error:", e);
+        }
     }
 }
 
-window.speechSynthesis.onvoiceschanged = () => { };
+// Safely assign onvoiceschanged
+if (synth) {
+    synth.onvoiceschanged = () => { };
+}
 
 // Init
 function initGame() {
@@ -340,19 +373,63 @@ function showResults() {
 }
 
 // Events
-document.getElementById('start-btn').addEventListener('click', initGame);
-document.getElementById('retry-btn').addEventListener('click', initGame);
-checkBtn.addEventListener('click', checkAnswer);
-nextBtn.addEventListener('click', () => {
+function addTouchListener(id, handler) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', handler);
+    el.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Stop double firing if click follows
+        handler(e);
+    }, { passive: false });
+}
+
+addTouchListener('start-btn', initGame);
+addTouchListener('retry-btn', initGame);
+
+// Check Button
+const checkBtnEl = document.getElementById('check-btn');
+checkBtnEl.addEventListener('click', checkAnswer);
+checkBtnEl.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    checkAnswer();
+}, { passive: false });
+
+// Next Button
+const nextHandler = () => {
     currentQuestionIndex++;
     loadQuestion();
-});
-clearBtn.addEventListener('click', () => {
+};
+const nextBtnEl = document.getElementById('next-btn');
+nextBtnEl.addEventListener('click', nextHandler);
+nextBtnEl.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    nextHandler();
+}, { passive: false });
+
+// Clear Button
+const clearHandler = () => {
     // Reset current selection
     currentWords.forEach(w => w.selected = false);
     selectedWordIds = [];
     renderUI();
-});
-replayBtn.addEventListener('click', () => {
-    speak(currentQuestions[currentQuestionIndex].audio, 0.9);
-});
+};
+const clearBtnEl = document.getElementById('clear-btn');
+clearBtnEl.addEventListener('click', clearHandler);
+clearBtnEl.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    clearHandler();
+}, { passive: false });
+
+// Replay Button
+const replayHandler = () => {
+    const qData = currentQuestions[currentQuestionIndex];
+    if (qData) {
+        speak(qData.audio, 0.9);
+    }
+};
+const replayBtnEl = document.getElementById('replay-btn');
+replayBtnEl.addEventListener('click', replayHandler);
+replayBtnEl.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    replayHandler();
+}, { passive: false });
