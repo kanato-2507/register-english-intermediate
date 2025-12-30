@@ -362,8 +362,18 @@ function checkAnswer() {
                 card.classList.add('success');
             });
 
-            // Animate score
-            score += Math.ceil(POINTS_PER_QUESTION + (timeLeft * 10));
+            // Calculate Score
+            const timeBonus = Math.ceil(timeLeft * 10);
+            const gainedPoints = POINTS_PER_QUESTION + timeBonus;
+            score += gainedPoints;
+
+            // Score Popup logic
+            const popup = document.createElement('div');
+            popup.classList.add('score-popup');
+            popup.innerHTML = `+${gainedPoints}<span style="font-size:0.6em; display:block; color:#666;">Time Bonus: ${timeBonus}</span>`;
+            document.querySelector('.hud').appendChild(popup);
+            setTimeout(() => popup.remove(), 1500);
+
             scoreDisplay.classList.add('animate');
             setTimeout(() => scoreDisplay.classList.remove('animate'), 500);
             updateScoreUI();

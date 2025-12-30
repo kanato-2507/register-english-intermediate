@@ -583,3 +583,38 @@ body {
 .app-container.retry-mode .hud {
     border-bottom: 2px solid rgba(255, 107, 107, 0.3);
 }
+
+/* Score Popup Animation */
+.score-popup {
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #FF9EC7;
+    pointer-events: none;
+    animation: popUpFade 1.5s ease-out forwards;
+    z-index: 20;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* White shadow for readability */
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+@keyframes popUpFade {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.8);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translateY(0) scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(1);
+    }
+}
