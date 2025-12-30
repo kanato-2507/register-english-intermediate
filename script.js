@@ -325,47 +325,52 @@ function createWordCard(word, inAnswerBox) {
 }
 
 function checkAnswer() {
-    const qData = currentQuestions[currentQuestionIndex];
+    try {
+        const qData = currentQuestions[currentQuestionIndex];
 
-    // Reconstruct sentence
-    const builtSentence = selectedWordIds.map(id => currentWords.find(w => w.id === id).text).join(' ');
-    const targetSentence = qData.sentence;
+        // Reconstruct sentence
+        const builtSentence = selectedWordIds.map(id => currentWords.find(w => w.id === id).text).join(' ');
+        const targetSentence = qData.sentence;
 
-    // Normalize (ignore simplistic case/punctuation diffs if needed)
-    if (builtSentence === targetSentence) {
-        // Correct - mark as answered correctly
-        qData.answeredCorrectly = true;
+        // Normalize for comparison (remove punctuation, lower case)
+        const normalize = (str) => str.replace(/[.,?!]/g, '').toLowerCase().trim();
 
-        // Random encouragement message
-        const randomMsg = ENCOURAGEMENT[Math.floor(Math.random() * ENCOURAGEMENT.length)];
-        feedbackMsg.textContent = randomMsg;
-        feedbackMsg.classList.remove('hidden', 'error');
-        feedbackMsg.classList.add('success');
+        if (normalize(builtSentence) === normalize(targetSentence)) {
+            // Correct - mark as answered correctly
+            qData.answeredCorrectly = true;
 
-        // Animate word cards
-        document.querySelectorAll('.answer-box .word-card').forEach(card => {
-            card.classList.add('success');
-        });
+            // Random encouragement message
+            const randomMsg = ENCOURAGEMENT[Math.floor(Math.random() * ENCOURAGEMENT.length)];
+            feedbackMsg.textContent = randomMsg;
+            feedbackMsg.classList.remove('hidden', 'error');
+            feedbackMsg.classList.add('success');
 
-        // Animate score
-        const oldScore = score;
-        score += Math.ceil(POINTS_PER_QUESTION + (timeLeft * 10));
-        scoreDisplay.classList.add('animate');
-        setTimeout(() => scoreDisplay.classList.remove('animate'), 500);
-        updateScoreUI();
+            // Animate word cards
+            document.querySelectorAll('.answer-box .word-card').forEach(card => {
+                card.classList.add('success');
+            });
 
-        // Speak the built sentence
-        speak(builtSentence, 1.0);
+            // Animate score
+            score += Math.ceil(POINTS_PER_QUESTION + (timeLeft * 10));
+            scoreDisplay.classList.add('animate');
+            setTimeout(() => scoreDisplay.classList.remove('animate'), 500);
+            updateScoreUI();
 
-        finishQuestion(true);
-    } else {
-        // Wrong - will retry later
-        feedbackMsg.textContent = "Try Again!";
-        feedbackMsg.classList.add('error');
-        feedbackMsg.classList.remove('hidden', 'success');
-        setTimeout(() => {
-            feedbackMsg.classList.add('hidden');
-        }, 1000);
+            // Speak the built sentence
+            speak(builtSentence, 1.0);
+
+            finishQuestion(true);
+        } else {
+            // Wrong
+            feedbackMsg.textContent = "Try Again!";
+            feedbackMsg.classList.add('error');
+            feedbackMsg.classList.remove('hidden', 'success');
+            setTimeout(() => {
+                feedbackMsg.classList.add('hidden');
+            }, 1000);
+        }
+    } catch (e) {
+        console.error("Check Answer Error", e);
     }
 }
 

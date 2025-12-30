@@ -80,13 +80,7 @@ body {
     }
 }
 
-@media (max-width: 600px) {
-    .screen {
-        padding: 1rem;
-        padding-bottom: 80px;
-        /* More space for buttons */
-    }
-}
+
 
 .screen.active {
     opacity: 1;
@@ -115,13 +109,13 @@ body {
 
 @media (max-height: 800px) {
     .title {
-        margin-top: 5vh;
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
+        margin-top: 2vh;
+        font-size: 1.8rem;
+        margin-bottom: 0.25rem;
     }
 
     .subtitle {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .character-area {
@@ -371,7 +365,6 @@ body {
     /* scrollable pool */
     -webkit-overflow-scrolling: touch;
     border: 1px solid rgba(0, 0, 0, 0.05);
-    /* subtle border */
     border-radius: 8px;
     padding: 2px;
 }
@@ -385,8 +378,9 @@ body {
 .word-card {
     background: white;
     border: 2px solid rgba(255, 182, 193, 0.3);
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
     cursor: pointer;
     font-family: 'Outfit', sans-serif;
     font-weight: 600;
