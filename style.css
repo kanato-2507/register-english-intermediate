@@ -557,3 +557,29 @@ body {
 #score-display.animate {
     animation: scoreUpBig 0.6s ease;
 }
+
+/* Retry Mode Styles */
+.app-container.retry-mode {
+    border: 3px solid #FF6B6B;
+    background: linear-gradient(135deg, #FFF0F0 0%, #FFE4E4 100%);
+}
+
+.app-container.retry-mode .title {
+    color: #D32F2F;
+}
+
+.app-container.retry-mode .question-counter {
+    background: #FF6B6B;
+    color: white;
+    border: 2px solid #D32F2F;
+}
+
+.app-container.retry-mode .question-counter::before {
+    content: "RETRY ";
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.app-container.retry-mode .hud {
+    border-bottom: 2px solid rgba(255, 107, 107, 0.3);
+}
