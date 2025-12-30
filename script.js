@@ -228,9 +228,19 @@ function loadQuestion() {
     questionText.textContent = qData.text;
 
     // Update question counter
-    // Denominator should be the number of questions in THIS game (e.g. 10)
-    const totalInGame = currentQuestions.length; // Should be 10
-    questionCounter.textContent = `${currentQuestionIndex + 1}/${totalInGame}`;
+    // Update question counter
+    // Denominator should be fixed to the initial game size (10)
+    // Even if we add recycled questions, the goal is "10 questions completed correctly"
+    // So we can show "Question X" or just keep denominator fixed.
+    // Let's stick to "Current / 10" and if it goes over, it goes over (e.g. 11/10) or we cap it.
+    // Better: Show "Progress: X" or just fix denominator.
+    const initialTotal = 10;
+    // If we are recycling, index goes up. 
+    // User might be confused if it says 11/10. 
+    // Let's display the *number of unique questions finished* vs total? 
+    // Or just simple: "Question: X/10". If it goes 11/10 it implies retry.
+    // User complaint is "changes from 10 to 12". So they want it STABLE.
+    questionCounter.textContent = `${currentQuestionIndex + 1}/${initialTotal}`;
 
     // Reset State
     selectedWordIds = [];
