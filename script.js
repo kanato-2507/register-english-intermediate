@@ -157,6 +157,15 @@ if (synth) {
 
 // Init
 function initGame() {
+    // Unlock Audio Context immediately on user interaction
+    if (synth) {
+        // Just speak empty or short to "warm up"
+        const u = new SpeechSynthesisUtterance("Let's start");
+        u.volume = 0; // Silent start if preferred, or audible
+        u.rate = 1.0;
+        synth.speak(u);
+    }
+
     score = 0;
     currentQuestionIndex = 0;
     // Select 10 random questions from the pool
@@ -215,7 +224,11 @@ function loadQuestion() {
     updateTimerUI();
     startTimer();
 
-    setTimeout(() => speak(qData.audio, 0.9), 500); // Speak prompt faster, answer slower
+    // Speak prompt
+    // On mobile, setTimeout might lose the 'user gesture' token, 
+    // but since we primed it in initGame, it might be okay.
+    // Reducing delay to ensure it feels responsive.
+    setTimeout(() => speak(qData.audio, 0.9), 300);
 }
 
 function renderUI() {

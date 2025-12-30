@@ -29,15 +29,28 @@ body {
 .app-container {
     width: 100%;
     max-width: 500px;
-    height: 100vh;
+    height: 100dvh;
+    /* Mobile viewport fix */
+    min-height: 100vh;
+    /* Fallback */
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    /* Container stays fixed, children scroll */
     position: relative;
     box-shadow: 0 8px 32px rgba(255, 158, 199, 0.3);
     border: 2px solid rgba(255, 182, 193, 0.2);
+}
+
+/* Mobile Layout Fix */
+@media (max-width: 600px) {
+    .app-container {
+        height: 100%;
+        min-height: 100dvh;
+        border: none;
+    }
 }
 
 .screen {
@@ -54,6 +67,12 @@ body {
     opacity: 0;
     pointer-events: none;
     transform: scale(0.95);
+    overflow-y: auto;
+    /* Allow scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scroll on iOS */
+    padding-bottom: 50px;
+    /* Safe space for scrolling */
 }
 
 .screen.active {
@@ -77,9 +96,19 @@ body {
     margin-bottom: 1rem;
     letter-spacing: -2px;
     background: linear-gradient(135deg, #FF9EC7, #C7A4FF);
-    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+@media (max-height: 800px) {
+    .title {
+        margin-top: 10vh;
+        font-size: 2.2rem;
+    }
+
+    .subtitle {
+        margin-bottom: 2rem;
+    }
 }
 
 .highlight {
