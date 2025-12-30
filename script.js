@@ -1,31 +1,10 @@
-// Debug Logger
-const debugBox = document.createElement('div');
-debugBox.style.position = 'fixed';
-debugBox.style.top = '0';
-debugBox.style.left = '0';
-debugBox.style.width = '100%';
-debugBox.style.maxHeight = '100px';
-debugBox.style.overflowY = 'scroll';
-debugBox.style.background = 'rgba(0,0,0,0.7)';
-debugBox.style.color = '#00ff00';
-debugBox.style.padding = '5px';
-debugBox.style.zIndex = '9999';
-debugBox.style.fontSize = '10px';
-debugBox.style.fontFamily = 'monospace';
-debugBox.style.pointerEvents = 'none'; // Click through
-document.body.appendChild(debugBox);
+// Debug Logger Removed
 
-function log(msg) {
-    const p = document.createElement('div');
-    p.textContent = `> ${msg}`;
-    debugBox.prepend(p);
-    console.log(msg);
-}
-
-window.onerror = function (msg, url, lineNo) {
-    log(`ERROR: ${msg} line:${lineNo}`);
-    return false;
-};
+// Remove Debug Log
+window.onerror = null;
+const debugBox = document.querySelector('div[style*="position: fixed"]');
+if (debugBox) debugBox.remove();
+function log(msg) { console.log(msg); } // No-op log
 
 // Game Configuration
 const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
@@ -92,6 +71,31 @@ const QUESTIONS = [
         text: "返品できますか？",
         audio: "Can I return this?",
         sentence: "I'm sorry we don't accept returns"
+    },
+    {
+        text: "交通系ICカードは使えますか？",
+        audio: "Can I use Suica or Pasmo?",
+        sentence: "Yes you can use transportation IC cards"
+    },
+    {
+        text: "営業時間は何時までですか？",
+        audio: "What time do you close?",
+        sentence: "We are open until nine PM"
+    },
+    {
+        text: "（本を指して）一番人気はどれですか？",
+        audio: "Which one is the most popular?",
+        sentence: "This novel is the number one bestseller"
+    },
+    {
+        text: "文房具は置いていますか？",
+        audio: "Do you sell stationery?",
+        sentence: "Stationery is on the left side of the store"
+    },
+    {
+        text: "袋はいりますか？（店員役として）",
+        audio: "Do you need a bag?",
+        sentence: "Plastic bags cost five yen"
     }
 ];
 
@@ -196,9 +200,19 @@ function initGame() {
     score = 0;
     currentQuestionIndex = 0;
     // Select 10 random questions from the pool
-    const shuffled = [...QUESTIONS].sort(() => 0.5 - Math.random());
+    // Fisher-Yates Shuffle for better randomness
+    const shuffled = [...QUESTIONS];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     currentQuestions = shuffled.slice(0, 10);
     updateScoreUI();
+
+    // Check Audio Support and Warn if missing
+    if (!synth) {
+        alert("Audio is not supported in this browser.\nPlease try Chrome or Safari for full experience.");
+    }
 
     startScreen.classList.remove('active');
     startScreen.classList.add('hidden');
@@ -221,9 +235,11 @@ function loadQuestion() {
     questionText.textContent = qData.text;
 
     // Update question counter
-    const totalOriginal = QUESTIONS.length;
-    const completedCount = currentQuestions.filter(q => q.answeredCorrectly).length;
-    questionCounter.textContent = `${completedCount}/${totalOriginal}`;
+    // Update question counter
+    // Denominator should be the number of questions in THIS game (e.g. 10), not the total pool
+    const totalInGame = currentQuestions.length;
+    const completedCount = currentQuestions.filter(q => q.answeredCorrectly).length + 1; // +1 to show current
+    questionCounter.textContent = `${Math.min(completedCount, totalInGame)}/${totalInGame}`;
 
     // Reset State
     selectedWordIds = [];
