@@ -72,7 +72,7 @@ const QUESTIONS = [
     {
         text: "営業時間は何時までですか？",
         audio: "What time do you close?",
-        sentence: "We are open until nine PM"
+        sentence: "We are open from ten AM to eight PM"
     },
     {
         text: "（本を指して）一番人気はどれですか？",
@@ -228,11 +228,9 @@ function loadQuestion() {
     questionText.textContent = qData.text;
 
     // Update question counter
-    // Update question counter
-    // Denominator should be the number of questions in THIS game (e.g. 10), not the total pool
-    const totalInGame = currentQuestions.length;
-    const completedCount = currentQuestions.filter(q => q.answeredCorrectly).length + 1; // +1 to show current
-    questionCounter.textContent = `${Math.min(completedCount, totalInGame)}/${totalInGame}`;
+    // Denominator should be the number of questions in THIS game (e.g. 10)
+    const totalInGame = currentQuestions.length; // Should be 10
+    questionCounter.textContent = `${currentQuestionIndex + 1}/${totalInGame}`;
 
     // Reset State
     selectedWordIds = [];
