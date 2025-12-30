@@ -1,17 +1,29 @@
-// Global Error Handler for Mobile Debugging
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-    const errorBox = document.createElement('div');
-    errorBox.style.position = 'fixed';
-    errorBox.style.top = '0';
-    errorBox.style.left = '0';
-    errorBox.style.width = '100%';
-    errorBox.style.background = 'red';
-    errorBox.style.color = 'white';
-    errorBox.style.padding = '10px';
-    errorBox.style.zIndex = '9999';
-    errorBox.style.fontSize = '12px';
-    errorBox.textContent = 'Error: ' + msg + ' at line ' + lineNo;
-    document.body.appendChild(errorBox);
+// Debug Logger
+const debugBox = document.createElement('div');
+debugBox.style.position = 'fixed';
+debugBox.style.top = '0';
+debugBox.style.left = '0';
+debugBox.style.width = '100%';
+debugBox.style.maxHeight = '100px';
+debugBox.style.overflowY = 'scroll';
+debugBox.style.background = 'rgba(0,0,0,0.7)';
+debugBox.style.color = '#00ff00';
+debugBox.style.padding = '5px';
+debugBox.style.zIndex = '9999';
+debugBox.style.fontSize = '10px';
+debugBox.style.fontFamily = 'monospace';
+debugBox.style.pointerEvents = 'none'; // Click through
+document.body.appendChild(debugBox);
+
+function log(msg) {
+    const p = document.createElement('div');
+    p.textContent = `> ${msg}`;
+    debugBox.prepend(p);
+    console.log(msg);
+}
+
+window.onerror = function (msg, url, lineNo) {
+    log(`ERROR: ${msg} line:${lineNo}`);
     return false;
 };
 
@@ -133,26 +145,41 @@ try {
 function speak(text, rate = 0.7) {
     if (synth) {
         try {
-            // Cancel any current speaking
+            log(`Speak called: ${text.substring(0, 10)}...`);
             synth.cancel();
 
             const utterThis = new SpeechSynthesisUtterance(text);
             const voices = synth.getVoices();
-            // Try to find English voice
+            log(`Voices avail: ${voices.length}`);
+
             const enVoice = voices.find(v => v.lang.startsWith('en'));
-            if (enVoice) utterThis.voice = enVoice;
+            if (enVoice) {
+                utterThis.voice = enVoice;
+                log(`Voice: ${enVoice.name}`);
+            } else {
+                log('No EN voice, using default');
+            }
 
             utterThis.rate = rate;
+
+            utterThis.onstart = () => log('Event: start');
+            utterThis.onend = () => log('Event: end');
+            utterThis.onerror = (e) => log(`Event: error ${e.error}`);
+
             synth.speak(utterThis);
         } catch (e) {
-            console.error("Speech error:", e);
+            log(`Speak Exception: ${e.message}`);
         }
+    } else {
+        log('Synth not available');
     }
 }
 
 // Safely assign onvoiceschanged
 if (synth) {
-    synth.onvoiceschanged = () => { };
+    synth.onvoiceschanged = () => {
+        log(`Voices changed: ${synth.getVoices().length}`);
+    };
 }
 
 // Init

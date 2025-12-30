@@ -75,6 +75,14 @@ body {
     /* Safe space for scrolling */
 }
 
+@media (max-width: 600px) {
+    .screen {
+        padding: 1rem;
+        padding-bottom: 80px;
+        /* More space for buttons */
+    }
+}
+
 .screen.active {
     opacity: 1;
     pointer-events: all;
@@ -298,6 +306,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    overflow-y: auto;
+    /* Allow this area to scroll if needed */
+    min-height: 0;
+    /* Important for flex child scrolling */
 }
 
 .label {
