@@ -1,6 +1,6 @@
 // Game Configuration
 const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
-const POINTS_PER_QUESTION = 200;
+const POINTS_PER_QUESTION = 100;
 
 // Quiz Data - Station Bookstore (Intermediate)
 const QUESTIONS = [
