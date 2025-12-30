@@ -1,11 +1,3 @@
-// Debug Logger Removed
-
-// Remove Debug Log
-window.onerror = null;
-const debugBox = document.querySelector('div[style*="position: fixed"]');
-if (debugBox) debugBox.remove();
-function log(msg) { console.log(msg); } // No-op log
-
 // Game Configuration
 const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
 const POINTS_PER_QUESTION = 200;
@@ -146,7 +138,7 @@ try {
     console.warn("Speech Synthesis not supported", e);
 }
 
-function speak(text, rate = 0.7) {
+function speak(text, rate = 1.0) {
     if (synth) {
         try {
             log(`Speak called: ${text.substring(0, 10)}...`);
@@ -271,7 +263,8 @@ function loadQuestion() {
     // On mobile, setTimeout might lose the 'user gesture' token, 
     // but since we primed it in initGame, it might be okay.
     // Reducing delay to ensure it feels responsive.
-    setTimeout(() => speak(qData.audio, 0.9), 300);
+    // Reducing delay to ensure it feels responsive.
+    setTimeout(() => speak(qData.audio, 1.0), 300);
 }
 
 function renderUI() {
@@ -360,7 +353,7 @@ function checkAnswer() {
         updateScoreUI();
 
         // Speak the built sentence
-        speak(builtSentence, 0.7);
+        speak(builtSentence, 1.0);
 
         finishQuestion(true);
     } else {
@@ -405,7 +398,8 @@ function handleTimeout() {
     // Timeout = wrong answer, will retry
     feedbackMsg.textContent = "Time's Up! Correct: " + currentQuestions[currentQuestionIndex].sentence;
     feedbackMsg.classList.remove('hidden', 'error');
-    speak(currentQuestions[currentQuestionIndex].sentence, 0.7);
+    feedbackMsg.classList.remove('hidden', 'error');
+    speak(currentQuestions[currentQuestionIndex].sentence, 1.0);
     finishQuestion(false); // Mark as incorrect to trigger retry
 }
 
