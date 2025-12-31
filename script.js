@@ -146,10 +146,14 @@ function speak(text, rate = SPEECH_RATE) {
 
             const utterThis = new SpeechSynthesisUtterance(text);
             appContainer.classList.add('speaking'); // Visual feedback if needed
-            utterThis.lang = 'en-US'; // CRITICAL: Force English language
-
             // Improved Voice Selection Priority: en-US > en-GB > any en
-            const voices = synth.getVoices();
+            // Wait for voices if possible, or just check again
+            let voices = synth.getVoices();
+            if (voices.length === 0) {
+                // Try to get voices again if array is empty (sometimes needed for Chrome/Safari)
+                // Note: getVoices() is sync but populates async.
+            }
+
             let selectedVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
             if (!selectedVoice) {
                 selectedVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
@@ -160,6 +164,14 @@ function speak(text, rate = SPEECH_RATE) {
 
             if (selectedVoice) {
                 utterThis.voice = selectedVoice;
+                // Only force language if we found a compatible voice
+                // This prevents silencing the default voice if it doesn't support 'en-US'
+                utterThis.lang = 'en-US';
+            } else {
+                // No English voice found.
+                // Fallback: Do NOT set lang='en-US' blindly.
+                // Let it use the system default (even if it's Japanese) so at least it makes sound.
+                // console.warn('No English voice found. Using default.');
             }
 
             // Debug Display for User - REMOVED after debugging
