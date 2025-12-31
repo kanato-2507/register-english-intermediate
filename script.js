@@ -145,6 +145,9 @@ function speak(text, rate = SPEECH_RATE) {
             synth.cancel();
 
             const utterThis = new SpeechSynthesisUtterance(text);
+            appContainer.classList.add('speaking'); // Visual feedback if needed
+            utterThis.lang = 'en-US'; // CRITICAL: Force English language
+
             // Improved Voice Selection Priority: en-US > en-GB > any en
             const voices = synth.getVoices();
             let selectedVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
@@ -159,11 +162,9 @@ function speak(text, rate = SPEECH_RATE) {
                 utterThis.voice = selectedVoice;
             }
 
-            // Debug Display for User
-            const debugEl = document.getElementById('voice-debug');
-            if (debugEl) {
-                debugEl.textContent = `Voice: ${selectedVoice ? selectedVoice.name : 'Default'} | Lang: ${selectedVoice ? selectedVoice.lang : 'N/A'} | Rate: ${rate}`;
-            }
+            // Debug Display for User - REMOVED after debugging
+            // const debugEl = document.getElementById('voice-debug'); ...
+
 
             utterThis.rate = rate;
 
