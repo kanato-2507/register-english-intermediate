@@ -1,6 +1,7 @@
 // Game Configuration
 const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
 const POINTS_PER_QUESTION = 100;
+const SPEECH_RATE = 0.8;
 
 // Quiz Data - Station Bookstore (Intermediate)
 const QUESTIONS = [
@@ -138,7 +139,7 @@ try {
     console.warn("Speech Synthesis not supported", e);
 }
 
-function speak(text, rate = 1.0) {
+function speak(text, rate = SPEECH_RATE) {
     if (synth) {
         try {
             // log(`Speak called: ${text.substring(0, 10)}...`);
@@ -185,7 +186,7 @@ function initGame() {
         // Just speak empty or short to "warm up"
         const u = new SpeechSynthesisUtterance("Let's start");
         u.volume = 0; // Silent start if preferred, or audible
-        u.rate = 1.0;
+        u.rate = SPEECH_RATE;
         synth.resume(); // CRITICAL for Chrome/Safari unlock
         synth.speak(u);
     }
@@ -275,7 +276,7 @@ function loadQuestion() {
     // but since we primed it in initGame, it might be okay.
     // Reducing delay to ensure it feels responsive.
     // Reducing delay to ensure it feels responsive.
-    setTimeout(() => speak(qData.audio, 1.0), 300);
+    setTimeout(() => speak(qData.audio), 300);
 }
 
 function renderUI() {
@@ -363,14 +364,17 @@ function checkAnswer() {
             });
 
             // Calculate Score
-            const timeBonus = Math.ceil(timeLeft * 10);
+            // User request: Round down to integer seconds (ignore decimals)
+            // e.g. 9.1s -> 9s -> 90 points
+            const timeBonus = Math.floor(timeLeft) * 10;
             const gainedPoints = POINTS_PER_QUESTION + timeBonus;
             score += gainedPoints;
 
             // Score Popup logic
             const popup = document.createElement('div');
             popup.classList.add('score-popup');
-            popup.innerHTML = `+${gainedPoints}<span style="font-size:0.6em; display:block; color:#666;">Time Bonus: ${timeBonus}</span>`;
+            // User request: Show "100 + 90" style
+            popup.innerHTML = `<span style="color:#FF9EC7;">${POINTS_PER_QUESTION}</span> + <span style="color:#A8E6CF;">${timeBonus}</span>`;
             document.querySelector('.hud').appendChild(popup);
             setTimeout(() => popup.remove(), 1500);
 
@@ -379,7 +383,7 @@ function checkAnswer() {
             updateScoreUI();
 
             // Speak the built sentence
-            speak(builtSentence, 1.0);
+            speak(builtSentence);
 
             finishQuestion(true);
         } else {
@@ -428,7 +432,7 @@ function handleTimeout() {
     feedbackMsg.textContent = "Time's Up! Correct: " + currentQuestions[currentQuestionIndex].sentence;
     feedbackMsg.classList.remove('hidden', 'error');
     feedbackMsg.classList.remove('hidden', 'error');
-    speak(currentQuestions[currentQuestionIndex].sentence, 1.0);
+    speak(currentQuestions[currentQuestionIndex].sentence);
     finishQuestion(false); // Mark as incorrect to trigger retry
 }
 
@@ -503,7 +507,7 @@ clearBtnEl.addEventListener('touchstart', (e) => {
 const replayHandler = () => {
     const qData = currentQuestions[currentQuestionIndex];
     if (qData) {
-        speak(qData.audio, 1.0);
+        speak(qData.audio);
     }
 };
 const replayBtnEl = document.getElementById('replay-btn');
