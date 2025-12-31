@@ -145,15 +145,24 @@ function speak(text, rate = SPEECH_RATE) {
             synth.cancel();
 
             const utterThis = new SpeechSynthesisUtterance(text);
+            // Improved Voice Selection Priority: en-US > en-GB > any en
             const voices = synth.getVoices();
-            // log(`Voices avail: ${voices.length}`);
+            let selectedVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+            }
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.lang.startsWith('en'));
+            }
 
-            const enVoice = voices.find(v => v.lang.startsWith('en'));
-            if (enVoice) {
-                utterThis.voice = enVoice;
-                // log(`Voice: ${enVoice.name}`);
-            } else {
-                // log('No EN voice, using default');
+            if (selectedVoice) {
+                utterThis.voice = selectedVoice;
+            }
+
+            // Debug Display for User
+            const debugEl = document.getElementById('voice-debug');
+            if (debugEl) {
+                debugEl.textContent = `Voice: ${selectedVoice ? selectedVoice.name : 'Default'} | Lang: ${selectedVoice ? selectedVoice.lang : 'N/A'} | Rate: ${rate}`;
             }
 
             utterThis.rate = rate;
