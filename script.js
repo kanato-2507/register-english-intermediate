@@ -138,55 +138,49 @@ try {
     console.warn("Speech Synthesis not supported", e);
 }
 
+// Global reference to prevent Garbage Collection bug in Chrome/Safari
+let currentUtterance = null;
+
 function speak(text, rate = SPEECH_RATE) {
     if (synth) {
         try {
             // log(`Speak called: ${text.substring(0, 10)}...`);
             synth.cancel();
 
-            const utterThis = new SpeechSynthesisUtterance(text);
-            appContainer.classList.add('speaking'); // Visual feedback if needed
-            // Improved Voice Selection Priority: en-US > en-GB > any en
-            // Wait for voices if possible, or just check again
-            let voices = synth.getVoices();
-            if (voices.length === 0) {
-                // Try to get voices again if array is empty (sometimes needed for Chrome/Safari)
-                // Note: getVoices() is sync but populates async.
-            }
+            // Store in global variable to prevent GC
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            const utterThis = currentUtterance;
 
-            let selectedVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
-            if (!selectedVoice) {
-                selectedVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
-            }
-            if (!selectedVoice) {
-                selectedVoice = voices.find(v => v.lang.startsWith('en'));
-            }
-
-            if (selectedVoice) {
-                utterThis.voice = selectedVoice;
-                // Only force language if we found a compatible voice
-                // This prevents silencing the default voice if it doesn't support 'en-US'
-                utterThis.lang = 'en-US';
-            } else {
-                // No English voice found.
-                // Fallback: Do NOT set lang='en-US' blindly.
-                // Let it use the system default (even if it's Japanese) so at least it makes sound.
-                // console.warn('No English voice found. Using default.');
-            }
-
-            // Debug Display for User - REMOVED after debugging
-            // const debugEl = document.getElementById('voice-debug'); ...
-
-
+            const appContainer = document.querySelector('.app-container');
+            appContainer.classList.add('speaking');
+            utterThis.lang = 'en-US'; // ALWAYS set to English for this app
             utterThis.rate = rate;
 
+            // Voice Selection: Try to find a better voice, but don't fail if missing
+            // Wait for voices if possible, or just check again
+            let voices = synth.getVoices();
+            if (voices.length > 0) {
+                let selectedVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
+                if (!selectedVoice) selectedVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+                if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
+
+                if (selectedVoice) {
+                    utterThis.voice = selectedVoice;
+                }
+            }
+
             utterThis.onstart = () => { };
-            utterThis.onend = () => { };
-            utterThis.onerror = (e) => { };
+            utterThis.onend = () => {
+                appContainer.classList.remove('speaking');
+            };
+            utterThis.onerror = (e) => {
+                console.error("Speech Error:", e);
+                appContainer.classList.remove('speaking');
+            };
 
             synth.speak(utterThis);
         } catch (e) {
-            // log(`Speak Exception: ${e.message}`);
+            console.error("Speak Exception:", e);
         }
     } else {
         // log('Synth not available');
@@ -297,7 +291,8 @@ function loadQuestion() {
     // but since we primed it in initGame, it might be okay.
     // Reducing delay to ensure it feels responsive.
     // Reducing delay to ensure it feels responsive.
-    setTimeout(() => speak(qData.audio), 300);
+    // On mobile, reducing delay helps maintain "user gesture" context
+    setTimeout(() => speak(qData.audio), 100);
 }
 
 function renderUI() {
