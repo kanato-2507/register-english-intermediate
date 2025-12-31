@@ -1,6 +1,6 @@
 const GAME_DURATION_PER_QUESTION = 20; // Longer time for building
 const POINTS_PER_QUESTION = 100;
-const SPEECH_RATE = 0.9;
+const SPEECH_RATE = 1.0;
 
 // Quiz Data - Station Bookstore (Intermediate)
 const QUESTIONS = [
